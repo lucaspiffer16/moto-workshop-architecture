@@ -1,0 +1,157 @@
+erDiagram
+  USERS {
+    text id PK
+    text name
+    text username UK
+    text password_hash
+    text created_at
+    text updated_at
+  }
+
+  WORKSHOP_CONFIG {
+    text id PK
+    text workshop_name
+    text cnpj
+    text phone
+    text address
+    text os_prefix
+    int  os_year_current
+    int  os_sequential
+    text created_at
+    text updated_at
+  }
+
+  CUSTOMERS {
+    text id PK
+    text name
+    text phone
+    text cpf
+    text email
+    text address
+    text created_at
+    text updated_at
+    text deleted_at
+  }
+
+  MOTORCYCLES {
+    text id PK
+    text customer_id FK
+    text plate
+    text brand
+    text model
+    int  year
+    text color
+    int  km_current
+    text chassis
+    text created_at
+    text updated_at
+    text deleted_at
+  }
+
+  PARTS {
+    text id PK
+    text sku UK
+    text barcode
+    text description
+    text brand
+    text applicable_model
+    text category
+    real cost_unit
+    real sale_price
+    real stock_current
+    real stock_minimum
+    text created_at
+    text updated_at
+    text deleted_at
+  }
+
+  STOCK_MOVEMENTS {
+    text id PK
+    text part_id FK
+    text type
+    real quantity
+    real cost_unit
+    text reason
+    text reference_type
+    text reference_id
+    text occurred_at
+    text created_at
+    text updated_at
+  }
+
+  WORK_ORDERS {
+    text id PK
+    text number UK
+    text customer_id FK
+    text motorcycle_id FK
+    text status
+    text entry_at
+    text exit_at
+    int  km_entry
+    int  km_exit
+    text customer_report
+    text diagnosis
+    text notes
+    real subtotal
+    real discount
+    real total
+    text authorized_by_name
+    text authorized_at
+    text delivered_to_name
+    text delivered_at
+    text printed_at
+    int  printed_version
+    text created_at
+    text updated_at
+    text deleted_at
+  }
+
+  WORK_ORDER_SERVICES {
+    text id PK
+    text work_order_id FK
+    text description
+    real quantity
+    real unit_price
+    real total
+    text created_at
+    text updated_at
+    text deleted_at
+  }
+
+  WORK_ORDER_PARTS {
+    text id PK
+    text work_order_id FK
+    text part_id FK
+    text description
+    text sku
+    real quantity
+    real unit_price
+    real total
+    real cost_unit
+    text created_at
+    text updated_at
+    text deleted_at
+  }
+
+  PAYMENTS {
+    text id PK
+    text work_order_id FK
+    text method
+    real amount
+    text paid_at
+    text notes
+    text created_at
+    text updated_at
+    text deleted_at
+  }
+
+  CUSTOMERS ||--o{ MOTORCYCLES : "owns"
+  CUSTOMERS ||--o{ WORK_ORDERS : "requests"
+  MOTORCYCLES ||--o{ WORK_ORDERS : "has"
+
+  WORK_ORDERS ||--o{ WORK_ORDER_SERVICES : "includes"
+  WORK_ORDERS ||--o{ WORK_ORDER_PARTS : "includes"
+  WORK_ORDERS ||--o{ PAYMENTS : "paid_with"
+
+  PARTS ||--o{ STOCK_MOVEMENTS : "moves"
+  PARTS ||--o{ WORK_ORDER_PARTS : "used_in"
