@@ -1,0 +1,125 @@
+classDiagram
+  direction LR
+
+  %% =====================
+  %% DOMAIN ENTITIES
+  %% =====================
+  class Customer {
+    id
+    name
+    phone
+    email
+  }
+
+  class Motorcycle {
+    id
+    plate
+    brand
+    model
+    kmCurrent
+  }
+
+  class WorkOrder {
+    id
+    number
+    status
+    entryAt
+    exitAt
+    subtotal
+    discount
+    total
+  }
+
+  class WorkOrderService {
+    id
+    description
+    quantity
+    unitPrice
+    total
+  }
+
+  class WorkOrderPart {
+    id
+    description
+    quantity
+    unitPrice
+    total
+  }
+
+  class Part {
+    id
+    sku
+    description
+    costUnit
+    salePrice
+    stockCurrent
+  }
+
+  class StockMovement {
+    id
+    type
+    quantity
+    occurredAt
+  }
+
+  class Payment {
+    id
+    method
+    amount
+    paidAt
+  }
+
+  %% =====================
+  %% APPLICATION USE CASES
+  %% =====================
+  class CreateWorkOrder {
+    execute()
+  }
+
+  class FinalizeWorkOrder {
+    execute()
+  }
+
+  class AdjustStock {
+    execute()
+  }
+
+  %% =====================
+  %% REPOSITORY CONTRACTS
+  %% =====================
+  class IWorkOrderRepository {
+    save()
+    getById()
+  }
+
+  class IPartRepository {
+    getById()
+    update()
+  }
+
+  class IStockRepository {
+    addMovement()
+  }
+
+  %% =====================
+  %% RELATIONSHIPS
+  %% =====================
+  Customer "1" --> "many" Motorcycle
+  Customer "1" --> "many" WorkOrder
+  Motorcycle "1" --> "many" WorkOrder
+
+  WorkOrder "1" --> "many" WorkOrderService
+  WorkOrder "1" --> "many" WorkOrderPart
+  WorkOrder "1" --> "many" Payment
+
+  WorkOrderPart --> Part
+  Part "1" --> "many" StockMovement
+
+  %% =====================
+  %% DEPENDENCIES
+  %% =====================
+  CreateWorkOrder --> IWorkOrderRepository
+  FinalizeWorkOrder --> IWorkOrderRepository
+  FinalizeWorkOrder --> IStockRepository
+  AdjustStock --> IPartRepository
+  AdjustStock --> IStockRepository
