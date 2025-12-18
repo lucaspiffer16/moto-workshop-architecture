@@ -1,0 +1,62 @@
+flowchart TB
+  user[Workshop Owner]
+
+  subgraph WO[Work Orders]
+    wo1((Create Work Order))
+    wo2((Edit Work Order))
+    wo3((Add Services to Work Order))
+    wo4((Add Parts to Work Order))
+    wo5((Finalize Work Order))
+    wo6((Cancel Work Order))
+    wo7((Print Work Order))
+    wo8((Search Work Orders))
+  end
+
+  subgraph CUST[Customers & Motorcycles]
+    c1((Create Customer))
+    c2((Edit Customer))
+    c3((Create Motorcycle))
+    c4((Edit Motorcycle))
+    c5((Search Customers/Motorcycles))
+  end
+
+  subgraph STOCK[Parts Stock]
+    s1((Create Part))
+    s2((Edit Part))
+    s3((Adjust Stock))
+    s4((Register Stock Entry))
+    s5((Register Stock Exit))
+    s6((Search Parts))
+    s7((Low Stock Check))
+  end
+
+  subgraph PAY[Payments]
+    p1((Register Payment))
+    p2((View Payment History))
+  end
+
+  user --> wo1
+  user --> wo2
+  user --> wo3
+  user --> wo4
+  user --> wo5
+  user --> wo6
+  user --> wo7
+  user --> wo8
+
+  user --> c1
+  user --> c2
+  user --> c3
+  user --> c4
+  user --> c5
+
+  user --> s1
+  user --> s2
+  user --> s3
+  user --> s4
+  user --> s5
+  user --> s6
+  user --> s7
+
+  user --> p1
+  user --> p2
