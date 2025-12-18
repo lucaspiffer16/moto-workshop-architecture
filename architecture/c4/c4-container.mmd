@@ -1,0 +1,16 @@
+flowchart LR
+  %% Actors
+  user["Workshop Owner"] --> ui["Desktop UI (MAUI Views)"];
+
+  %% App containers (internal)
+  ui --> vm["Presentation Layer (ViewModels - MVVM)"];
+  vm --> app["Application Layer (Use Cases / Services)"];
+  app --> domain["Domain / Core (Entities + Interfaces)"];
+  app --> infra["Infrastructure (SQLite Repos + Device Services)"];
+  infra --> db[("SQLite Local Database")];
+  infra --> print["Printing / PDF Service (Windows)"];
+
+  %% Rules (no direct access)
+  ui -.->|"forbidden"| db;
+  vm -.->|"forbidden"| db;
+  ui -.->|"forbidden"| infra;

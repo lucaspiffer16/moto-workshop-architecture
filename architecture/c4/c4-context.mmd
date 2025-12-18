@@ -1,0 +1,8 @@
+flowchart LR
+  user["Workshop Owner"] --> app["Moto Workshop Desktop App (.NET MAUI)"];
+  app --> db[("SQLite Local Database")];
+  app --> printer["Printer / PDF Output"];
+
+  %% Future (optional)
+  app -.-> sync["Sync API (Future)"];
+  sync -.-> mobile["Mobile App (Future)"];
