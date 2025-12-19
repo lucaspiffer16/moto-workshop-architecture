@@ -1,0 +1,67 @@
+sequenceDiagram
+  autonumber
+  actor User as Workshop Owner
+  participant View as WorkOrderDetailsView (MAUI)
+  participant VM as WorkOrderDetailsViewModel
+  participant UC as RegisterPaymentUseCase
+  participant PayRepo as IPaymentRepository
+  participant WoRepo as IWorkOrderRepository
+  participant PrintSvc as IPrintService
+  participant Db as SQLite Database
+
+  User->>View: Open Work Order details
+  View->>VM: Load(workOrderId)
+  VM->>WoRepo: GetById(workOrderId)
+  WoRepo->>Db: SELECT work_order + items + payments
+  Db-->>WoRepo: WorkOrder aggregate
+  WoRepo-->>VM: WorkOrder
+
+  User->>View: Click "Add Payment"
+  View->>VM: AddPaymentCommand.Execute(method, amount, paidAt)
+
+  VM->>UC: Execute(workOrderId, method, amount, paidAt)
+
+  UC->>WoRepo: GetById(workOrderId)
+  WoRepo->>Db: SELECT work_order + payments
+  Db-->>WoRepo: WorkOrder
+  WoRepo-->>UC: WorkOrder
+
+  UC->>UC: Validate payment (amount > 0, method valid)
+  UC->>Db: BEGIN TRANSACTION
+
+  UC->>PayRepo: Create(payment)
+  PayRepo->>Db: INSERT payments(...)
+  Db-->>PayRepo: OK
+
+  opt Update work order fields (optional)
+    UC->>WoRepo: TouchUpdatedAt(workOrderId)
+    WoRepo->>Db: UPDATE work_orders SET updated_at=?
+    Db-->>WoRepo: OK
+  end
+
+  UC->>Db: COMMIT
+  UC-->>VM: Result.Success
+
+  VM->>VM: Refresh totals/balance (computed from payments)
+  VM-->>View: Update UI (payment list, remaining balance)
+  View-->>User: Show success message
+
+  opt Print after payment
+    User->>View: Click "Print"
+    View->>VM: PrintCommand.Execute()
+
+    VM->>PrintSvc: RenderAndPrint(workOrderId)
+    PrintSvc->>WoRepo: GetById(workOrderId)
+    WoRepo->>Db: SELECT work_order + items + payments
+    Db-->>WoRepo: WorkOrder aggregate
+    WoRepo-->>PrintSvc: WorkOrder
+
+    PrintSvc->>Db: BEGIN TRANSACTION
+    PrintSvc->>WoRepo: IncrementPrintedVersion(workOrderId)
+    WoRepo->>Db: UPDATE work_orders SET printed_version=printed_version+1, printed_at=?
+    Db-->>WoRepo: OK
+    PrintSvc->>Db: COMMIT
+
+    PrintSvc-->>VM: Success
+    VM-->>View: Show "Printed"
+  end

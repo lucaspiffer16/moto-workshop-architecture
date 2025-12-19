@@ -1,0 +1,56 @@
+sequenceDiagram
+  autonumber
+  actor User as Workshop Owner
+  participant View as WorkOrderDetailsView (MAUI)
+  participant VM as WorkOrderDetailsViewModel
+  participant UC as FinalizeWorkOrderUseCase
+  participant WoRepo as IWorkOrderRepository
+  participant PartRepo as IPartRepository
+  participant StockRepo as IStockRepository
+  participant Db as SQLite Database
+
+  User->>View: Click "Finalize"
+  View->>VM: FinalizeCommand.Execute()
+
+  VM->>VM: Validate UI state (IsBusy=false)
+  VM->>UC: Execute(workOrderId)
+
+  UC->>WoRepo: GetById(workOrderId)
+  WoRepo->>Db: SELECT work_order + items + payments
+  Db-->>WoRepo: WorkOrder aggregate
+  WoRepo-->>UC: WorkOrder
+
+  UC->>UC: Validate domain rules\n(status, items not empty, etc.)
+  UC->>UC: Recalculate totals (subtotal, discount, total)
+
+  loop For each WorkOrderPart with partId
+    UC->>PartRepo: GetById(partId)
+    PartRepo->>Db: SELECT part by id
+    Db-->>PartRepo: Part
+    PartRepo-->>UC: Part
+
+    UC->>UC: Check stock availability (stock_current >= qty)
+  end
+
+  UC->>Db: BEGIN TRANSACTION
+
+  UC->>WoRepo: UpdateStatusDone(workOrderId, exitAt, totals)
+  WoRepo->>Db: UPDATE work_orders SET status='done', exit_at=?, totals=?
+  Db-->>WoRepo: OK
+
+  loop For each WorkOrderPart with partId
+    UC->>StockRepo: AddMovement(type='exit', qty, reference='OS')
+    StockRepo->>Db: INSERT stock_movements(...)
+    Db-->>StockRepo: OK
+
+    UC->>PartRepo: DecreaseStock(partId, qty)
+    PartRepo->>Db: UPDATE parts SET stock_current = stock_current - ?
+    Db-->>PartRepo: OK
+  end
+
+  UC->>Db: COMMIT
+
+  UC-->>VM: Result.Success
+  VM->>VM: Refresh screen state
+  VM-->>View: Update UI (status=done, totals, exit_at)
+  View-->>User: Show success message

@@ -1,0 +1,39 @@
+sequenceDiagram
+  autonumber
+  actor User as Workshop Owner
+  participant View as WorkOrdersListView (MAUI)
+  participant VM as WorkOrdersListViewModel
+  participant UC as SearchWorkOrdersUseCase
+  participant WoRepo as IWorkOrderRepository
+  participant Db as SQLite Database
+
+  User->>View: Open "Work Orders"
+  View->>VM: Initialize()
+
+  VM->>UC: Execute(filters, page, pageSize)
+  UC->>WoRepo: Search(filters, page, pageSize)
+
+  WoRepo->>Db: SELECT list (work_orders + customer + motorcycle)\nWHERE status/date/text\nORDER BY entry_at DESC\nLIMIT/OFFSET
+  Db-->>WoRepo: rows
+  WoRepo-->>UC: WorkOrderListItem[]
+  UC-->>VM: Result.Success(items, totalCount?)
+
+  VM-->>View: Render list
+
+  opt User updates filters
+    User->>View: Change filter (status/date/search)
+    View->>VM: ApplyFiltersCommand.Execute()
+    VM->>UC: Execute(updatedFilters, page=1, pageSize)
+    UC->>WoRepo: Search(updatedFilters, page=1, pageSize)
+    WoRepo->>Db: SELECT list with updated WHERE
+    Db-->>WoRepo: rows
+    WoRepo-->>UC: WorkOrderListItem[]
+    UC-->>VM: Result.Success(items)
+    VM-->>View: Refresh list
+  end
+
+  opt User opens details
+    User->>View: Click an item
+    View->>VM: OpenDetailsCommand.Execute(workOrderId)
+    VM-->>View: Navigate to WorkOrderDetailsView(workOrderId)
+  end

@@ -1,0 +1,26 @@
+flowchart TD
+  start(["Start"]) --> s1["Search / Select Part"];
+  s1 --> s2{"Adjustment type?"};
+
+  s2 -- "Increase" --> inc1["Enter quantity to add"];
+  inc1 --> inc2["Create StockMovement (type = entry, reason = adjustment)"];
+  inc2 --> inc3["Update parts.stock_current += quantity"];
+  inc3 --> endNode(["End"]);
+
+  s2 -- "Decrease" --> dec1["Enter quantity to remove"];
+  dec1 --> dec2{"Enough stock?"};
+  dec2 -- "No" --> err1["Show error: insufficient stock"];
+  err1 --> endNode;
+
+  dec2 -- "Yes" --> dec3["Create StockMovement (type = exit, reason = adjustment)"];
+  dec3 --> dec4["Update parts.stock_current -= quantity"];
+  dec4 --> endNode;
+
+  s2 -- "Set exact" --> set1["Enter new stock value"];
+  set1 --> set2["Compute delta = new - current"];
+  set2 --> set3{"Delta >= 0?"};
+  set3 -- "Yes" --> set4["Create StockMovement (type = entry, reason = adjustment)"];
+  set3 -- "No" --> set5["Create StockMovement (type = exit, reason = adjustment)"];
+  set4 --> set6["Update parts.stock_current = new value"];
+  set5 --> set6;
+  set6 --> endNode;

@@ -1,0 +1,53 @@
+sequenceDiagram
+  autonumber
+  actor User as Workshop Owner
+  participant View as CreateWorkOrderView (MAUI)
+  participant VM as CreateWorkOrderViewModel
+  participant UC as CreateWorkOrderUseCase
+  participant OsSvc as OsNumberService
+  participant WoRepo as IWorkOrderRepository
+  participant CRepo as ICustomerRepository
+  participant MRepo as IMotorcycleRepository
+  participant Db as SQLite Database
+
+  User->>View: Open "New Work Order"
+  View->>VM: Initialize()
+
+  alt Customer not selected
+    User->>View: Create Customer
+    View->>VM: SaveCustomerCommand.Execute()
+    VM->>CRepo: Save(customer)
+    CRepo->>Db: INSERT customers(...)
+    Db-->>CRepo: OK
+    CRepo-->>VM: customerId
+  end
+
+  alt Motorcycle not selected
+    User->>View: Create Motorcycle
+    View->>VM: SaveMotorcycleCommand.Execute()
+    VM->>MRepo: Save(motorcycle)
+    MRepo->>Db: INSERT motorcycles(...)
+    Db-->>MRepo: OK
+    MRepo-->>VM: motorcycleId
+  end
+
+  User->>View: Click "Create Work Order"
+  View->>VM: CreateCommand.Execute()
+
+  VM->>UC: Execute(customerId, motorcycleId, kmEntry, customerReport)
+
+  UC->>Db: BEGIN TRANSACTION
+  UC->>OsSvc: GetNextOsNumber()
+  OsSvc->>Db: SELECT/UPDATE workshop_config (atomic increment)
+  Db-->>OsSvc: nextNumber = OS-YYYY-000001
+  OsSvc-->>UC: nextNumber
+
+  UC->>WoRepo: Create(workOrder)
+  WoRepo->>Db: INSERT work_orders(number,status,entry_at,...)
+  Db-->>WoRepo: OK (workOrderId)
+
+  UC->>Db: COMMIT
+
+  UC-->>VM: Result.Success(workOrderId, number)
+  VM-->>View: Navigate to WorkOrderDetailsView(workOrderId)
+  View-->>User: Show created OS number

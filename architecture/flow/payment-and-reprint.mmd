@@ -1,0 +1,21 @@
+flowchart TD
+  start(["Start"]) --> w1["Search Work Orders"];
+  w1 --> w2["Open Work Order details"];
+  w2 --> p1{"Is there remaining balance?"};
+
+  p1 -- "No" --> r1{"Reprint needed?"};
+  r1 -- "No" --> endNode(["End"]);
+  r1 -- "Yes" --> pr1["Render printable document"];
+  pr1 --> pr2["Print / Export PDF"];
+  pr2 --> pr3["Increment printed_version / Update printed_at"];
+  pr3 --> endNode;
+
+  p1 -- "Yes" --> pay1["Enter payment method + amount"];
+  pay1 --> pay2["Create Payment record"];
+  pay2 --> pay3["Recalculate paid total (optional)"];
+  pay3 --> r2{"Print receipt / OS now?"};
+  r2 -- "No" --> endNode;
+  r2 -- "Yes" --> pr4["Render printable document"];
+  pr4 --> pr5["Print / Export PDF"];
+  pr5 --> pr6["Increment printed_version / Update printed_at"];
+  pr6 --> endNode;

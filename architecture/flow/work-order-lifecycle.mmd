@@ -1,0 +1,44 @@
+flowchart TD
+  start(["Start"]) --> c1{"Customer exists?"};
+
+  c1 -- "No" --> c2["Create Customer"];
+  c1 -- "Yes" --> c3["Select Customer"];
+  c2 --> c3;
+
+  c3 --> m1{"Motorcycle exists?"};
+  m1 -- "No" --> m2["Create Motorcycle"];
+  m1 -- "Yes" --> m3["Select Motorcycle"];
+  m2 --> m3;
+
+  m3 --> os1["Create Work Order"];
+  os1 --> os2["Generate OS Number (OS-YYYY-000001)"];
+  os2 --> os3["Set Status = open / Set entry_at"];
+
+  os3 --> add1{"Add items?"};
+  add1 --> s1["Add Services"];
+  add1 --> p1["Add Parts"];
+  s1 --> add1;
+  p1 --> add1;
+
+  add1 --> f1{"Finalize now?"};
+  f1 -- "No" --> save1["Save as Draft / In Progress"];
+  save1 --> endNode(["End"]);
+
+  f1 -- "Yes" --> fin1["Validate Work Order"];
+  fin1 --> fin2["Recalculate totals (subtotal, discount, total)"];
+  fin2 --> fin3["Update Status = done / Set exit_at"];
+
+  fin3 --> stock1["Create stock movements (type = exit)"];
+  stock1 --> stock2["Decrease parts.stock_current"];
+
+  stock2 --> pay1{"Register payment now?"};
+  pay1 -- "Yes" --> pay2["Create Payment"];
+  pay2 --> print1{"Print now?"};
+  pay1 -- "No" --> print1;
+
+  print1 -- "Yes" --> pr1["Render printable document"];
+  pr1 --> pr2["Print / Export PDF"];
+  pr2 --> pr3["Set printed_at / Increment printed_version"];
+  pr3 --> endNode;
+
+  print1 -- "No" --> endNode;
